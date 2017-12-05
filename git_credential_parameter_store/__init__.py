@@ -1,29 +1,22 @@
 import boto3
 
 
-"""
-Get Github credentials from AWS parameter store
-"""
 class Credential(object):
     def get(self, user_key, password_key):
         ssm = boto3.client('ssm')
         resp = ssm.get_parameters(
             Names=[
                 user_key,
-                password_key
-            ],
-            WithDecryption=True
-        )
-        for invalid in resp.get('InvalidParameters'):
+                password_key],
+            WithDecryption=True)
+        for invalid in resp['InvalidParameters']:
             raise KeyError("Invalid parameter: %s" % invalid)
-        ret = dict(
-            username=resp['Parameters'][0]['Value'],
-            password=resp['Parameters'][1]['Value']
-        )
+
+        ret = dict()
+        for param in resp['Parameters']:
+            if param['Name'] == user_key:
+                ret['username'] = param['Value']
+            elif param['Name'] == password_key:
+                ret['password'] = param['Value']
+
         return ret
-    
-    def store(self):
-        pass
-    
-    def erase(self):
-        pass
